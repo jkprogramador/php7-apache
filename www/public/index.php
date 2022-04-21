@@ -1,6 +1,6 @@
 <?php
 
-phpinfo();
+// phpinfo();
 $a = 10;
 $b = 'foo';
 $c = 67;

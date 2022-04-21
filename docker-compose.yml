@@ -8,3 +8,36 @@ services:
       - 8000:80
     volumes:
       - ./www:/var/www/mydomain
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+
+  db:
+    image: mysql:8.0.28
+    container_name: mysql
+    ports:
+      - 3306:3306
+    volumes:
+      - php-apache_db_data:/var/lib/mysql
+      - php-apache_db_logs:/var/log/mysql
+    env_file:
+      - .env
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-p${MYSQL_ROOT_PASSWORD}"
+        ]
+      interval: 8s
+      timeout: 20s
+      retries: 3
+
+volumes:
+  php-apache_db_data:
+    external: true
+  php-apache_db_logs:
+    external: true
