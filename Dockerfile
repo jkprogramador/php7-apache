@@ -162,3 +162,10 @@ RUN set -eux; \
 # -i : edit files in place
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf; \
     sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf;
+
+RUN [ -e "${PHP_INI_DIR}/conf.d/docker-php-ext-xdebug.ini" ]; \
+    { \
+    echo 'xdebug.mode=debug'; \
+    echo 'xdebug.start_with_request=yes'; \
+    echo 'xdebug.client_host=host.docker.internal'; \
+    } >> ${PHP_INI_DIR}/conf.d/docker-php-ext-xdebug.ini;
