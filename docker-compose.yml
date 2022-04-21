@@ -2,7 +2,9 @@ services:
   web:
     image: php7-apache:latest
     container_name: php7-apache
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - 8000:80
     volumes:
-      - ./www:/var/www/html
+      - ./www:/var/www/mydomain

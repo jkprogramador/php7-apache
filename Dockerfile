@@ -137,16 +137,35 @@ RUN set -eux; \
     echo 'opcache.fast_shutdown=1'; \
     } > /usr/local/etc/php/conf.d/opcache-recommended.ini
 
+WORKDIR /var/www/mydomain/public
+
+ENV APACHE_DOCUMENT_ROOT /var/www/mydomain/public
+
 RUN set -eux; \
     \
     # https://wordpress.org/support/article/htaccess/
-    [ ! -e /var/www/html/.htaccess ]; \
+    [ ! -e "${APACHE_DOCUMENT_ROOT}/.htaccess" ]; \
     { \
     echo 'RewriteEngine On'; \
     echo 'RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]'; \
-    echo 'RewriteBase /'; \
-    echo 'RewriteRule ^index\.php$ - [L]'; \
+    echo 'RewriteCond %{REQUEST_FILENAME} !-d'; \
+    echo 'RewriteCond %{REQUEST_URI} (.+)/$'; \
+    echo 'RewriteRule ^ %1 [L, R=301]'; \
     echo 'RewriteCond %{REQUEST_FILENAME} !-f'; \
     echo 'RewriteCond %{REQUEST_FILENAME} !-d'; \
     echo 'RewriteRule . /index.php [L]'; \
-    } > /var/www/html/.htaccess;
+    } > ${APACHE_DOCUMENT_ROOT}/.htaccess;
+
+# sed options are:
+# -e <script> : add the script to the commands to be executed
+# -r : use extended regular expressions
+# -i : edit files in place
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf; \
+    sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf;
+
+RUN [ -e "${PHP_INI_DIR}/conf.d/docker-php-ext-xdebug.ini" ]; \
+    { \
+    echo 'xdebug.mode=debug'; \
+    echo 'xdebug.start_with_request=yes'; \
+    echo 'xdebug.client_host=host.docker.internal'; \
+    } >> ${PHP_INI_DIR}/conf.d/docker-php-ext-xdebug.ini;
